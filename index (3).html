@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIND</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @font-face { font-family: 'Chiron GoRound TC'; src: local('Chiron GoRound TC'); font-weight: normal; }
+  :root{
+    --sky1:#B7C9DA; --sky2:#DCE6EF; --cream:#F3F2EE; --grey1:#C7CDD6; --grey2:#888FA0;
+    --ink:#3E4552; --danger:#C4695E; --radius:18px; --glass:rgba(255,255,255,0.55); --glassBorder:rgba(255,255,255,0.6);
+    --input-bg:rgba(255,255,255,0.8); --chip-bg:rgba(255,255,255,0.7);
+  }
+  [data-theme="dark"]{
+    --sky1:#232A3D; --sky2:#2E3752; --cream:#1B2030; --grey1:#4A5470; --grey2:#9AA6C4;
+    --ink:#E4E8F5; --danger:#E28A7D; --glass:rgba(30,36,54,0.6); --glassBorder:rgba(255,255,255,0.08);
+    --input-bg:rgba(255,255,255,0.06); --chip-bg:rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box; min-width:0;}
+  body{margin:0; min-height:100vh; color:var(--ink); font-family:'Chiron GoRound TC','M PLUS Rounded 1c','Quicksand','Segoe UI',sans-serif;
+    background:linear-gradient(160deg,var(--sky1) 0%, var(--sky2) 45%, var(--cream) 100%); background-attachment:fixed; transition:background .3s, color .3s;}
+  .cloud-layer{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; opacity:.5;}
+  .cloud-layer svg{position:absolute;}
+  #cursorCloud{position:fixed; top:0; left:0; z-index:9998; pointer-events:none; will-change:transform;
+    filter:drop-shadow(0 3px 4px rgba(80,90,110,0.15));}
+  header{display:flex; align-items:center; justify-content:space-between; padding:12px 20px; position:relative; z-index:3;}
+  .brand{display:flex; align-items:center; gap:8px; opacity:.9;}
+  .brand > svg{width:16px; height:16px; flex-shrink:0;}
+  .brand-title{font-size:1.15rem; letter-spacing:2px; font-weight:700; color:var(--ink);}
+  .brand-sub{font-size:0.6rem; letter-spacing:.6px; color:var(--grey2); opacity:.75;}
+  nav.icons{display:flex; gap:8px; align-items:center; position:relative;}
+  .icon-btn{width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--glassBorder); background:var(--glass); cursor:pointer; flex-shrink:0;}
+  .icon-btn svg{width:12px; height:12px; opacity:.65; stroke:var(--ink); flex-shrink:0;}
+  .icon-btn.active{background:var(--grey2);}
+  .icon-btn.active svg{opacity:1; stroke:white;}
+  .icon-sm{display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; flex-shrink:0;}
+  .icon-sm svg{width:14px; height:14px; display:block;}
+  .lang-menu{position:absolute; top:30px; right:0; background:var(--cream); border:1px solid var(--glassBorder);
+    border-radius:12px; padding:10px; z-index:20; backdrop-filter:blur(6px); min-width:180px; box-shadow:0 6px 18px rgba(0,0,0,0.12);}
+  .lang-menu div{padding:6px 10px; font-size:0.75rem; border-radius:8px; cursor:pointer; white-space:nowrap;}
+  .lang-menu div:hover{background:var(--sky2);}
+  main{max-width:1050px; margin:0 auto; padding:8px 20px 80px; position:relative; z-index:2;}
+  .glass{background:var(--glass); backdrop-filter:blur(6px); border:1px solid var(--glassBorder); border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(90,110,140,0.12); padding:20px; margin-bottom:16px;}
+  h1,h2,h3,h4{font-weight:600; color:var(--ink); margin:0 0 10px; word-break:keep-all; overflow-wrap:break-word;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .btn{border:none; border-radius:999px; padding:9px 18px; font-size:0.8rem; font-family:inherit; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; background:var(--grey2); color:white; transition:.15s; white-space:nowrap;}
+  .btn:hover{background:var(--ink);}
+  .btn.light{background:var(--input-bg); color:var(--grey2); border:1px solid var(--grey1);}
+  .btn.light:hover{background:var(--sky2);}
+  .btn.danger{background:var(--danger);}
+  .btn.tiny{padding:5px 10px; font-size:0.68rem;}
+  .btn svg{width:13px; height:13px; flex-shrink:0;}
+  input,select,textarea{width:100%; padding:8px 11px; border-radius:12px; border:1px solid var(--grey1);
+    background:var(--input-bg); font-family:inherit; font-size:0.82rem; color:var(--ink); margin-bottom:9px;}
+  textarea{resize:vertical; min-height:56px;}
+  label{font-size:0.72rem; color:var(--grey2); letter-spacing:.4px; display:block; margin-bottom:4px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;}
+  .folder{background:var(--chip-bg); border-radius:14px; padding:14px; cursor:pointer; border:1px solid var(--glassBorder); transition:.15s;}
+  .folder:hover{transform:translateY(-2px);}
+  .folder h3{margin:5px 0 2px; font-size:0.95rem;}
+  .folder .meta{font-size:0.68rem; color:var(--grey2);}
+  .folder-icon svg{width:18px; height:18px; opacity:.6; display:block;}
+  .session-item{display:flex; justify-content:space-between; align-items:center; padding:9px 13px; border-radius:12px;
+    background:var(--chip-bg); margin-bottom:7px; cursor:pointer; gap:10px;}
+  .tag{font-size:0.62rem; padding:2px 7px; border-radius:999px; background:var(--sky2); color:var(--grey2); letter-spacing:.4px; white-space:nowrap;}
+  .q-block{border:1px dashed var(--grey1); border-radius:16px; padding:16px; margin-bottom:14px; background:rgba(255,255,255,0.15);}
+  .layout-grid{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;}
+  .layout-opt{padding:7px 12px; border-radius:12px; border:1px solid var(--grey1); font-size:0.74rem; cursor:pointer; background:var(--chip-bg); white-space:nowrap;}
+  .layout-opt.active{background:var(--grey2); color:white; border-color:var(--grey2);}
+  .toggle-row{display:flex; gap:16px; margin-bottom:10px; flex-wrap:wrap;}
+  .toggle-row label{display:flex; align-items:center; gap:5px; font-size:0.78rem; cursor:pointer; white-space:nowrap; flex-shrink:0;}
+  .modal-overlay{position:fixed; inset:0; background:rgba(30,36,54,0.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:16px;}
+  .modal-box{background:var(--cream); border-radius:16px; padding:24px; max-width:420px; text-align:center; color:var(--ink);}
+  .modal-box h3{color:var(--danger);}
+  .hex-pair{display:flex; gap:26px; flex-wrap:wrap; justify-content:center; margin:10px 0;}
+  .hex-col{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .hex-col .hex-label{font-size:0.88rem; font-weight:700; color:var(--ink);}
+  .hexline{display:flex; flex-direction:column; align-items:center; gap:9px; margin:6px 0;}
+  .hexrow{display:flex; align-items:center; gap:8px;}
+  .hexbar{width:66px; height:8px; border-radius:4px; background:var(--ink); position:relative; cursor:pointer;}
+  .hexbar.broken{background:linear-gradient(to right, var(--ink) 0 26px, transparent 26px 40px, var(--ink) 40px 100%);}
+  .hexbar.static{cursor:default;}
+  .hexmark{width:12px; font-size:0.75rem; color:var(--danger); font-weight:700;}
+  .small-note{font-size:0.65rem; color:var(--grey2); margin-top:2px; margin-bottom:6px;}
+  .hex-example{font-size:0.62rem; color:var(--grey2); background:rgba(255,255,255,0.2); border-radius:10px; padding:8px 10px; margin-bottom:10px;}
+  footer{text-align:center; font-size:0.62rem; color:var(--grey2); opacity:.6; padding:18px;}
+
+  .today-card{padding:20px;}
+  .today-top{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:12px;}
+  .today-clock{font-size:1.6rem; font-weight:700; color:var(--ink); letter-spacing:1px;}
+  .today-dates{font-size:0.75rem; color:var(--grey2); line-height:1.5;}
+  .today-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:10px;}
+  .today-cell{background:rgba(255,255,255,0.35); border-radius:12px; padding:10px 12px;}
+  .today-cell .cell-label{font-size:0.62rem; color:var(--grey2); letter-spacing:.5px; margin-bottom:4px;}
+  .today-cell .cell-value{font-size:0.9rem; font-weight:700; color:var(--ink);}
+  .pillar-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .pillar-chip{background:rgba(255,255,255,0.5); border-radius:10px; padding:6px 10px; text-align:center; font-size:0.75rem; font-weight:700;}
+  .pillar-chip .pillar-tag{display:block; font-size:0.58rem; color:var(--grey2); font-weight:400; margin-bottom:2px;}
+  .elements-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .elem-chip{font-size:0.68rem; padding:3px 9px; border-radius:999px; background:var(--sky2); color:var(--ink);}
+  .luck-badge{display:inline-block; font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:999px; margin-right:6px;}
+  .luck-good{background:#DDEBD9; color:#4C7A50;}
+  .luck-bad{background:#F3DCD8; color:#A2564C;}
+  [data-theme="dark"] .luck-good{background:#2E4232; color:#9FD6A4;}
+  [data-theme="dark"] .luck-bad{background:#4A2E2C; color:#E3A79B;}
+  .approx-note{font-size:0.6rem; color:var(--grey2); opacity:.75; margin-top:8px;}
+
+  .pool-wrap{margin:8px 0 14px;}
+  .pool-search{max-width:240px;}
+  .pool-chips{display:flex; flex-wrap:wrap; gap:6px; max-height:160px; overflow-y:auto; padding:8px; border-radius:12px; background:rgba(255,255,255,0.15); align-content:flex-start;}
+  .pool-group-label{flex:1 0 100%; font-size:0.62rem; letter-spacing:.5px; color:var(--grey2); margin:4px 0 1px; font-weight:600;}
+  .chip{padding:5px 10px; border-radius:999px; background:var(--chip-bg); border:1px solid var(--glassBorder); font-size:0.68rem; cursor:grab; user-select:none; white-space:nowrap;}
+  .chip:active{cursor:grabbing;}
+
+  .spread-grid{display:grid; gap:12px; margin-bottom:10px;}
+  .custom-canvas{position:relative; width:100%; height:420px; border:1px dashed var(--grey1); border-radius:14px; background:rgba(255,255,255,0.15); margin-bottom:12px; overflow:hidden;}
+  .slot{border:1px dashed var(--grey1); border-radius:14px; padding:8px; min-height:150px; width:130px; text-align:center;
+    background:rgba(255,255,255,0.35); position:relative;}
+  .slot.dragover{background:rgba(180,200,220,0.5);}
+  .slot.free-slot{position:absolute; transform:translate(-50%,-50%); width:150px;}
+  .drag-handle{cursor:move; font-size:0.9rem; color:var(--grey2); margin-bottom:5px; letter-spacing:2px;
+    background:rgba(255,255,255,0.55); border-radius:8px; padding:8px 0; touch-action:none; user-select:none;}
+  .slot .card-img-wrap{width:80px; height:110px; margin:0 auto 5px; border-radius:10px; overflow:hidden; background:var(--sky2);
+    display:flex; align-items:center; justify-content:center;}
+  .slot .card-img-wrap img{width:100%; height:100%; object-fit:cover;}
+  .slot .card-img-wrap.reversed img{transform:rotate(180deg);}
+  .slot .card-img-wrap svg{width:26px; height:26px; opacity:.55;}
+  .slot .card-name{font-size:0.68rem; font-weight:600; margin-bottom:3px;}
+  .slot textarea{font-size:0.68rem; min-height:44px; margin-bottom:4px;}
+  .slot .mini-btn{font-size:0.6rem; padding:3px 7px; border-radius:8px; border:1px solid var(--grey1); background:transparent; cursor:pointer; margin:2px; color:var(--ink);}
+  .slot .mini-btn.active{background:var(--grey2); color:white;}
+  .remove-slot{background:none; border:none; color:var(--danger); font-size:0.62rem; cursor:pointer; padding:2px 0;}
+
+  #splash{position:fixed; inset:0; z-index:999; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(160deg,var(--sky1) 0%, var(--sky2) 45%, var(--cream) 100%); transition:opacity .8s ease; cursor:pointer;}
+  #splash.fade-out{opacity:0; pointer-events:none;}
+  .splash-inner{display:flex; flex-direction:column; align-items:center; gap:12px; animation:splashIn 1.4s ease;}
+  .splash-inner svg{width:56px; height:56px; stroke:var(--grey2); animation:floaty 3.4s ease-in-out infinite;}
+  .splash-title{font-size:2.4rem; letter-spacing:6px; font-weight:700; color:var(--ink);}
+  .splash-sub{font-size:0.8rem; letter-spacing:2px; color:var(--grey2);}
+  @keyframes splashIn{from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);}}
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  @media print{ header, nav, .no-print{display:none !important;} }
+</style>
+</head>
+<body>
+<div class="cloud-layer" id="cloudLayer"></div>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/></svg>
+    <div><div class="brand-title">WIND</div><div class="brand-sub" id="brandSub"></div></div>
+  </div>
+  <nav class="icons">
+    <div class="icon-btn" id="themeLight" title="light"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2 2M17.8 17.8l2 2M2 12h3M19 12h3M4.2 19.8l2-2M17.8 6.2l2-2"/></svg></div>
+    <div class="icon-btn" id="themeDark" title="dark"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></div>
+    <div class="icon-btn" id="settingsBtn" title="settings"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg></div>
+    <div class="icon-btn" id="langBtn" title="language"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/></svg></div>
+    <div class="lang-menu" id="langMenu" style="display:none;">
+      <div data-lang="en">English</div><div data-lang="zh">中文 (繁體)</div><div data-lang="ko">한국어</div>
+    </div>
+  </nav>
+</header>
+<main id="app"></main>
+<footer id="footerText"></footer>
+
+<script>
+/* ===================== I18N ===================== */
+const TRANSLATIONS = {
+en:{
+  brandSub:"tarot · lenormand · i-ching journal", footer:"made with quiet stars, for friends & family",
+  askersTitle:"Askers", newAsker:"New Asker", searchAsker:"search a name...", noAskers:"No askers yet — start your first session ✧",
+  sessionsCount:"session(s)", lastSession:"last", backAll:"← All Askers", newSession:"New Session", deleteAsker:"Delete Asker",
+  askerNotesPh:"general notes about this asker...", sessionsTitle:"Sessions", noSessions:"No sessions yet.", untitled:"(untitled session)",
+  backBtn:"← Back", questions:"Questions", addQuestion:"+ Add Question", removeQuestion:"remove question",
+  questionPh:"e.g. career direction for next 3 months", layoutLabel:"Card Layout", categoryLabel:"Category",
+  catPersonal:"Personal", catCareer:"Career", catRelationship:"Relationships", catLove:"Love", catHealth:"Health", catOther:"Other",
+  layoutSingle:"Single Card", layoutThree:"Three Timeline", layoutVshape:"Fork Choice", layoutLovertree:"Lovers' Tree", layoutGrandcross:"Grand Cross", layoutCustom:"Custom",
+  sectionsLabel:"Sections to include", tarot:"Tarot", lenormand:"Lenormand", iching:"I-Ching",
+  addPosition:"+ add position", positionNamePh:"position name", searchCardPh:"search card name...",
+  dropHint:"drag a card here", reversedBtn:"Reversed", uprightBtn:"Upright", readingPh:"reading & explanation for this card",
+  lenormandSetExplanationPh:"combined explanation for this whole lenormand set",
+  hexHint:"click = toggle yin/yang · shift+click = mark changing line",
+  hexExample:"example: mark line 2 as changing → future hexagram flips that line",
+  hexPresent:"Present", hexFuture:"Future", hexNoChange:"no changing lines yet",
+  hexReadingCurrentPh:"reading for the present hexagram", hexReadingFuturePh:"reading for the future / outcome hexagram",
+  questionSummaryLabel:"Explanation for this question",
+  questionSummaryPh:"what this question's cards/hexagram mean for the asker", finalSummaryTitle:"Final Summary",
+  finalSummaryLabel:"Overall interpretation for the whole session", finalSummaryPh:"weaving everything together...",
+  saveSession:"Save Session", exportPdf:"Export as PDF", deleteTitle:"Delete", deleteBody:"will permanently remove this asker and all",
+  deleteBody2:"saved session(s). This cannot be undone.", cancel:"Cancel", deletePermanently:"Delete permanently",
+  editSession:"Edit this session", askerNamePrompt:"Name of the asker:", askerNotFound:"Asker not found.",
+  cardLabel:"choose card", summaryLabel:"Final Summary", questionLabel:"Question", dragHandleHint:"⠿ drag",
+  groupMajor:"Major Arcana", groupWands:"Wands", groupCups:"Cups", groupSwords:"Swords", groupPentacles:"Pentacles",
+  settingsTitle:"Settings & Admin", versionLabel:"Version", creditsLabel:"Credits",
+  creditsText:"Built quietly for reading tarot, lenormand & i-ching with friends and family.",
+  backupTitle:"Backup", exportJson:"Export data (.json)", importJson:"Import data (.json)", closeBtn:"Close",
+  gregorianLabel:"Solar Date", lunarLabel:"Lunar Date", moonPhaseLabel:"Moon Phase", zodiacLabel:"Zodiac Sun Sign",
+  fourPillarsLabel:"Four Pillars (BaZi)", elementsLabel:"Five Elements", luckTitle:"Today's Fortune",
+  birthChartBtn:"View Birth Chart →", illumLabel:"illuminated", approxNote:"Month pillar is a simplified solar-term approximation, for reference & fun only.",
+  yearP:"Year", monthP:"Month", dayP:"Day", hourP:"Hour"
+},
+zh:{
+  brandSub:"塔羅 · Lenormand · 易經紀錄", footer:"為朋友同家人而做的靜謐星圖",
+  askersTitle:"Askers", newAsker:"新增Asker", searchAsker:"搜尋名字...", noAskers:"未有Asker — 開始第一個session ✧",
+  sessionsCount:"個session", lastSession:"最近", backAll:"← 所有Asker", newSession:"新Session", deleteAsker:"刪除Asker",
+  askerNotesPh:"呢個asker嘅一般備註...", sessionsTitle:"Sessions", noSessions:"未有session。", untitled:"（未命名session）",
+  backBtn:"← 返回", questions:"問題", addQuestion:"+ 加問題", removeQuestion:"移除呢個問題",
+  questionPh:"例如：未來三個月嘅事業方向", layoutLabel:"牌陣佈局", categoryLabel:"範疇",
+  catPersonal:"個人", catCareer:"事業", catRelationship:"人際關係", catLove:"愛情", catHealth:"健康", catOther:"其他",
+  layoutSingle:"單卡", layoutThree:"三張時間線", layoutVshape:"選擇分叉陣", layoutLovertree:"戀人之樹", layoutGrandcross:"大十字占卜法", layoutCustom:"自訂",
+  sectionsLabel:"揀要加入嘅部分", tarot:"塔羅", lenormand:"Lenormand", iching:"易經",
+  addPosition:"+ 加位置", positionNamePh:"位置名稱", searchCardPh:"搜尋卡牌名...",
+  dropHint:"將卡拖到呢度", reversedBtn:"逆位", uprightBtn:"正位", readingPh:"呢張卡嘅解讀同解釋",
+  lenormandSetExplanationPh:"整組lenormand嘅合併解讀",
+  hexHint:"click = 切換陰陽 · shift+click = 標動爻",
+  hexExample:"例：將第2爻標為動爻 → 未來卦嗰條線會反轉陰陽",
+  hexPresent:"現卦", hexFuture:"未來卦", hexNoChange:"未有動爻",
+  hexReadingCurrentPh:"現卦嘅解讀", hexReadingFuturePh:"未來卦／結果嘅解讀",
+  questionSummaryLabel:"呢個問題嘅解釋",
+  questionSummaryPh:"呢個問題嘅卡/卦對asker嘅意思", finalSummaryTitle:"總結",
+  finalSummaryLabel:"整個session嘅總體解讀", finalSummaryPh:"將所有嘢串連埋一齊嘅總結...",
+  saveSession:"儲存Session", exportPdf:"匯出PDF", deleteTitle:"刪除", deleteBody:"將永久刪除呢個asker同全部",
+  deleteBody2:"個已儲存嘅session，呢個動作不能還原。", cancel:"取消", deletePermanently:"永久刪除",
+  editSession:"編輯呢個session", askerNamePrompt:"Asker嘅名：", askerNotFound:"搵唔到呢個asker。",
+  cardLabel:"揀卡", summaryLabel:"總結", questionLabel:"問題", dragHandleHint:"⠿ 拖曳",
+  groupMajor:"大牌 Major Arcana", groupWands:"權杖 Wands", groupCups:"聖杯 Cups", groupSwords:"寶劍 Swords", groupPentacles:"金幣 Pentacles",
+  settingsTitle:"設定與管理", versionLabel:"版本", creditsLabel:"Credits",
+  creditsText:"靜靜地為咗幫朋友同家人占卜塔羅、Lenormand同易經而做。",
+  backupTitle:"備份", exportJson:"匯出資料 (.json)", importJson:"匯入資料 (.json)", closeBtn:"關閉",
+  gregorianLabel:"公曆", lunarLabel:"農曆", moonPhaseLabel:"月相", zodiacLabel:"星座",
+  fourPillarsLabel:"四柱（八字）", elementsLabel:"五行", luckTitle:"今日吉凶",
+  birthChartBtn:"睇Birth Chart →", illumLabel:"月光", approxNote:"月柱用簡化節氣估算，僅供參考同娛樂用途。",
+  yearP:"年柱", monthP:"月柱", dayP:"日柱", hourP:"時柱"
+},
+ko:{
+  brandSub:"타로 · 르노르망 · 주역 기록", footer:"친구와 가족을 위한 조용한 별의 기록",
+  askersTitle:"내담자", newAsker:"내담자 추가", searchAsker:"이름 검색...", noAskers:"아직 내담자가 없어요 — 첫 세션을 시작하세요 ✧",
+  sessionsCount:"세션", lastSession:"최근", backAll:"← 전체 내담자", newSession:"새 세션", deleteAsker:"내담자 삭제",
+  askerNotesPh:"이 내담자에 대한 일반 메모...", sessionsTitle:"세션", noSessions:"아직 세션이 없어요.", untitled:"(제목 없는 세션)",
+  backBtn:"← 뒤로", questions:"질문", addQuestion:"+ 질문 추가", removeQuestion:"질문 삭제",
+  questionPh:"예: 앞으로 3개월 진로 방향", layoutLabel:"카드 배치", categoryLabel:"범주",
+  catPersonal:"개인", catCareer:"진로", catRelationship:"인간관계", catLove:"연애", catHealth:"건강", catOther:"기타",
+  layoutSingle:"싱글 카드", layoutThree:"3카드 타임라인", layoutVshape:"분기 선택", layoutLovertree:"연인의 나무", layoutGrandcross:"그랜드 크로스", layoutCustom:"커스텀",
+  sectionsLabel:"포함할 섹션", tarot:"타로", lenormand:"르노르망", iching:"주역",
+  addPosition:"+ 위치 추가", positionNamePh:"위치 이름", searchCardPh:"카드 이름 검색...",
+  dropHint:"카드를 여기로 드래그", reversedBtn:"역방향", uprightBtn:"정방향", readingPh:"이 카드에 대한 해석",
+  lenormandSetExplanationPh:"이 르노르망 세트 전체에 대한 종합 해석",
+  hexHint:"클릭 = 음/양 전환 · shift+클릭 = 변효 표시",
+  hexExample:"예: 2번 효를 변효로 표시하면 → 미래 괘에서 그 줄이 반전돼요",
+  hexPresent:"현재", hexFuture:"미래", hexNoChange:"변효가 아직 없어요",
+  hexReadingCurrentPh:"현재 괘에 대한 해석", hexReadingFuturePh:"미래 / 결과 괘에 대한 해석",
+  questionSummaryLabel:"이 질문에 대한 설명",
+  questionSummaryPh:"이 질문의 카드/괘가 내담자에게 의미하는 것", finalSummaryTitle:"최종 요약",
+  finalSummaryLabel:"전체 세션에 대한 총평", finalSummaryPh:"모든 것을 종합한 요약...",
+  saveSession:"세션 저장", exportPdf:"PDF로 내보내기", deleteTitle:"삭제", deleteBody:"이 내담자와 저장된",
+  deleteBody2:"개 세션을 영구적으로 삭제합니다. 되돌릴 수 없어요.", cancel:"취소", deletePermanently:"영구 삭제",
+  editSession:"이 세션 편집", askerNamePrompt:"내담자 이름:", askerNotFound:"내담자를 찾을 수 없어요.",
+  cardLabel:"카드 선택", summaryLabel:"최종 요약", questionLabel:"질문", dragHandleHint:"⠿ 드래그",
+  groupMajor:"메이저 아르카나", groupWands:"완드", groupCups:"컵", groupSwords:"소드", groupPentacles:"펜타클",
+  settingsTitle:"설정 및 관리", versionLabel:"버전", creditsLabel:"크레딧",
+  creditsText:"친구와 가족을 위한 타로·르노르망·주역 기록을 위해 조용히 만들었어요.",
+  backupTitle:"백업", exportJson:"데이터 내보내기 (.json)", importJson:"데이터 가져오기 (.json)", closeBtn:"닫기",
+  gregorianLabel:"양력", lunarLabel:"음력", moonPhaseLabel:"달의 위상", zodiacLabel:"별자리",
+  fourPillarsLabel:"사주(四柱)", elementsLabel:"오행", luckTitle:"오늘의 운세",
+  birthChartBtn:"Birth Chart 보기 →", illumLabel:"조도", approxNote:"월주는 절기 간이 계산이며 참고·오락용입니다.",
+  yearP:"연주", monthP:"월주", dayP:"일주", hourP:"시주"
+}};
+let LANG = localStorage.getItem('kinoastro_lang') || 'zh';
+function t(k){ return (TRANSLATIONS[LANG] && TRANSLATIONS[LANG][k]!==undefined) ? TRANSLATIONS[LANG][k] : (TRANSLATIONS.en[k]||k); }
+const CATEGORY_KEYS = ['catPersonal','catCareer','catRelationship','catLove','catHealth','catOther'];
+
+/* ===================== THEME ===================== */
+let THEME = localStorage.getItem('kinoastro_theme') || 'light';
+function applyTheme(){
+  document.body.setAttribute('data-theme', THEME);
+  document.getElementById('themeLight').classList.toggle('active', THEME==='light');
+  document.getElementById('themeDark').classList.toggle('active', THEME==='dark');
+}
+const THEME_COLORS = {
+  light:{ink:'#3E4552', grey2:'#888FA0', sky2:'#DCE6EF', cream:'#F3F2EE', border:'rgba(200,205,214,0.6)'},
+  dark:{ink:'#E4E8F5', grey2:'#9AA6C4', sky2:'#2E3752', cream:'#1B2030', border:'rgba(255,255,255,0.12)'}
+};
+
+/* ===================== TODAY WIDGET: astro/almanac calc ===================== */
+const STEMS = "甲乙丙丁戊己庚辛壬癸";
+const BRANCHES = "子丑寅卯辰巳午未申酉戌亥";
+const STEM_ELEM = ["木","木","火","火","土","土","金","金","水","水"];
+const BRANCH_ELEM = ["水","土","木","木","土","火","火","土","金","金","土","水"];
+const ZODIAC_ANIMALS = ["鼠","牛","虎","兔","龍","蛇","馬","羊","猴","雞","狗","豬"];
+const JIANCHU = ["建","除","滿","平","定","執","破","危","成","收","開","閉"];
+const JIANCHU_GOOD = new Set(["除","危","定","執","成","開"]);
+const JIANCHU_NOTE = {
+  "建":"宜求財、出行；忌安葬、動土","除":"宜結婚、祈福；忌出行","滿":"宜祈福、開市；忌安葬",
+  "平":"宜修造、日常事；忌動土","定":"宜結婚、入宅；忌訴訟","執":"宜修造、捕捉；忌開市",
+  "破":"諸事不宜，宜靜守","危":"宜祭祀；忌登高、乘船","成":"宜開市、立約；忌訴訟",
+  "收":"宜納財、收穫；忌出行","開":"宜開市、出行；忌安葬","閉":"宜築堤、安葬；忌開市、出行"
+};
+function jdn(y,m,d){
+  const a = Math.floor((m-14)/12);
+  const b = 1461*(y+4800+a);
+  const c = 367*(m-2-12*a);
+  const e = Math.floor((y+4900+a)/100);
+  return Math.floor(b/4) + Math.floor(c/12) - Math.floor(3*e/4) + d - 32075;
+}
+function computeFourPillars(dt){
+  const y=dt.getFullYear(), m=dt.getMonth()+1, d=dt.getDate(), hr=dt.getHours();
+  const j = jdn(y,m,d);
+  const dayStemIdx = ((j-1)%10+10)%10, dayBranchIdx = ((j+1)%12+12)%12;
+  const yearStemIdx = ((y-4)%10+10)%10, yearBranchIdx = ((y-4)%12+12)%12;
+  const HU_START = {0:2,5:2, 1:4,6:4, 2:6,7:6, 3:8,8:8, 4:0,9:0};
+  const monthBranchIdx = [1,2,3,4,5,6,7,8,9,10,11,0][m-1];
+  const startStem = HU_START[yearStemIdx];
+  const monthOffset = ((monthBranchIdx-2)%12+12)%12;
+  const monthStemIdx = (startStem+monthOffset)%10;
+  const hourBranchIdx = Math.floor(((hr+1)%24)/2);
+  const SHU_START = {0:0,5:0, 1:2,6:2, 2:4,7:4, 3:6,8:6, 4:8,9:8};
+  const hourStemIdx = (SHU_START[dayStemIdx]+hourBranchIdx)%10;
+  const mk=(s,b)=>({stem:STEMS[s], branch:BRANCHES[b], stemElem:STEM_ELEM[s], branchElem:BRANCH_ELEM[b]});
+  return {
+    year:mk(yearStemIdx,yearBranchIdx), month:mk(monthStemIdx,monthBranchIdx),
+    day:mk(dayStemIdx,dayBranchIdx), hour:mk(hourStemIdx,hourBranchIdx),
+    yearAnimal:ZODIAC_ANIMALS[yearBranchIdx], dayBranchIdx, monthBranchIdx
+  };
+}
+function jianchuOf(pillars){
+  const idx = ((pillars.dayBranchIdx - pillars.monthBranchIdx)%12+12)%12;
+  const name = JIANCHU[idx];
+  return {name, good:JIANCHU_GOOD.has(name), note:JIANCHU_NOTE[name]};
+}
+function elementTally(pillars){
+  const tally = {"木":0,"火":0,"土":0,"金":0,"水":0};
+  [pillars.year,pillars.month,pillars.day,pillars.hour].forEach(p=>{ tally[p.stemElem]++; tally[p.branchElem]++; });
+  return tally;
+}
+function moonPhaseOf(dt){
+  const ref = new Date(Date.UTC(2000,0,6,18,14));
+  const days = (dt.getTime()-ref.getTime())/86400000;
+  const synodic = 29.530588853;
+  let phase = days % synodic; if(phase<0) phase += synodic;
+  const illum = (1-Math.cos(2*Math.PI*phase/synodic))/2;
+  const names = LANG==='ko'
+    ? ["신월","초승달","상현달","상현 보름 전","보름달","하현 보름 후","하현달","그믐달"]
+    : (LANG==='en' ? ["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"]
+    : ["新月","娥眉月（漸盈）","上弦月","漸盈凸月","滿月","漸虧凸月","下弦月","殘月（漸虧）"]);
+  const idx = Math.floor(((phase/synodic)*8)+0.5)%8;
+  return {phase, illum, name:names[idx]};
+}
+const ZODIAC_RANGES = [
+  [1,20,"Capricorn"],[2,19,"Aquarius"],[3,21,"Pisces"],[4,20,"Aries"],
+  [5,21,"Taurus"],[6,21,"Gemini"],[7,23,"Cancer"],[8,23,"Leo"],
+  [9,23,"Virgo"],[10,23,"Libra"],[11,22,"Scorpio"],[12,22,"Sagittarius"],[12,32,"Capricorn"]
+];
+const ZODIAC_ZH = {Capricorn:"魔羯座",Aquarius:"水瓶座",Pisces:"雙魚座",Aries:"白羊座",Taurus:"金牛座",Gemini:"雙子座",Cancer:"巨蟹座",Leo:"獅子座",Virgo:"處女座",Libra:"天秤座",Scorpio:"天蠍座",Sagittarius:"射手座"};
+const ZODIAC_KO = {Capricorn:"염소자리",Aquarius:"물병자리",Pisces:"물고기자리",Aries:"양자리",Taurus:"황소자리",Gemini:"쌍둥이자리",Cancer:"게자리",Leo:"사자자리",Virgo:"처녀자리",Libra:"천칭자리",Scorpio:"전갈자리",Sagittarius:"사수자리"};
+function zodiacSignOf(dt){
+  const m=dt.getMonth()+1, d=dt.getDate();
+  for(const [mm,dd,name] of ZODIAC_RANGES){ if(m<mm || (m===mm && d<=dd)) return name; }
+  return "Capricorn";
+}
+function zodiacLabelOf(name){ return LANG==='zh'? ZODIAC_ZH[name] : (LANG==='ko'? ZODIAC_KO[name] : name); }
+function lunarDateOf(dt){
+  try{ return new Intl.DateTimeFormat('zh-Hant-u-ca-chinese',{year:'numeric',month:'long',day:'numeric'}).format(dt); }
+  catch(e){ return '—'; }
+}
+function renderTodayWidget(){
+  const now = new Date();
+  const pillars = computeFourPillars(now);
+  const jc = jianchuOf(pillars);
+  const elems = elementTally(pillars);
+  const moon = moonPhaseOf(now);
+  const zSign = zodiacSignOf(now);
+  const weekdayFmt = new Intl.DateTimeFormat(LANG==='zh'?'zh-Hant':(LANG==='ko'?'ko':'en'),{weekday:'long'});
+  const pillarBlock = (labelKey,p)=>`<div class="pillar-chip"><span class="pillar-tag">${t(labelKey)}</span>${p.stem}${p.branch}</div>`;
+  return `<div class="glass today-card">
+    <div class="today-top">
+      <div>
+        <div class="today-clock" id="liveClock">${now.toLocaleTimeString(LANG==='en'?'en-GB':undefined,{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="today-dates">
+          ${t('gregorianLabel')}: ${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} (${weekdayFmt.format(now)})<br>
+          ${t('lunarLabel')}: ${lunarDateOf(now)} · ${pillars.yearAnimal}年
+        </div>
+      </div>
+      <a class="btn light tiny" href="https://horoscopes.astro-seek.com/birth-chart-horoscope-online" target="_blank" rel="noopener">${t('birthChartBtn')}</a>
+    </div>
+    <div class="today-grid">
+      <div class="today-cell"><div class="cell-label">${t('moonPhaseLabel')}</div><div class="cell-value">${moon.name}</div><div class="small-note" style="margin:2px 0 0;">${Math.round(moon.illum*100)}% ${t('illumLabel')}</div></div>
+      <div class="today-cell"><div class="cell-label">${t('zodiacLabel')}</div><div class="cell-value">${zodiacLabelOf(zSign)}</div></div>
+      <div class="today-cell"><div class="cell-label">${t('luckTitle')}</div><div class="cell-value">
+        <span class="luck-badge ${jc.good?'luck-good':'luck-bad'}">${jc.name}${jc.good?(LANG==='zh'?'（黃道吉日）':(LANG==='ko'?' (길일)':' (favorable)')):(LANG==='zh'?'（黑道日）':(LANG==='ko'?' (주의일)':' (caution)'))}</span>
+        </div><div class="small-note" style="margin:2px 0 0;">${jc.note}</div></div>
+    </div>
+    <label style="margin-top:12px;">${t('fourPillarsLabel')}</label>
+    <div class="pillar-row">
+      ${pillarBlock('yearP',pillars.year)}${pillarBlock('monthP',pillars.month)}${pillarBlock('dayP',pillars.day)}${pillarBlock('hourP',pillars.hour)}
+    </div>
+    <label style="margin-top:10px;">${t('elementsLabel')}</label>
+    <div class="elements-row">
+      ${Object.entries(elems).map(([k,v])=>`<span class="elem-chip">${k} ×${v}</span>`).join('')}
+    </div>
+    <div class="approx-note">${t('approxNote')}</div>
+  </div>`;
+}
+
+/* ===================== DATA: TAROT (Wikimedia Commons RWS deck) ===================== */
+function wikiPath(name){ return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(name.replace(/ /g,'_'))}`; }
+const MAJOR = ["The Fool","The Magician","The High Priestess","The Empress","The Emperor","The Hierophant",
+"The Lovers","The Chariot","Strength","The Hermit","Wheel of Fortune","Justice","The Hanged Man","Death",
+"Temperance","The Devil","The Tower","The Star","The Moon","The Sun","Judgement","The World"];
+const MAJOR_FILES = ["Fool","Magician","High Priestess","Empress","Emperor","Hierophant","Lovers","Chariot",
+"Strength","Hermit","Wheel of Fortune","Justice","Hanged Man","Death","Temperance","Devil","Tower","Star","Moon","Sun","Judgement","World"];
+const SUITS = {Wands:{icon:"sun", file:"Wands"}, Cups:{icon:"moon", file:"Cups"}, Swords:{icon:"cloud", file:"Swords"}, Pentacles:{icon:"world", file:"Pents"}};
+const RANKS = ["Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Page","Knight","Queen","King"];
+function pad2(n){ return String(n).padStart(2,'0'); }
+function buildTarot(){
+  const deck = MAJOR.map((n,i)=>({id:"major_"+i, name:n, fallback:ICONS_RAW.star, img:wikiPath(`RWS Tarot ${pad2(i)} ${MAJOR_FILES[i]}.jpg`)}));
+  Object.keys(SUITS).forEach(suit=>{
+    RANKS.forEach((r,i)=>{
+      const id = `${suit.toLowerCase()}_${i}`;
+      deck.push({id, name:`${r} of ${suit}`, fallback:ICONS_RAW[SUITS[suit].icon], img:wikiPath(`${SUITS[suit].file}${pad2(i+1)}.jpg`)});
+    });
+  });
+  return deck;
+}
+
+/* ===================== DATA: LENORMAND (simple line-art icons) ===================== */
+const LEN_PATHS = [
+'<path d="M3 17l3-4 4 1 2-3 5 1 4 5"/><circle cx="19" cy="9" r="1.4"/>',
+'<circle cx="10" cy="8" r="2.1"/><circle cx="7" cy="11" r="2.1"/><circle cx="13" cy="11" r="2.1"/><path d="M10 13v6"/>',
+'<path d="M4 15h16l-2 4H6z"/><path d="M12 15V4M12 6l5 3M12 9l-4 2"/>',
+'<path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/>',
+'<path d="M12 3l5 7h-3l4 6h-4v5h-4v-5H6l4-6H7z"/>',
+'<path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/>',
+'<path d="M3 12q3-5 6 0t6-5 6 0"/><circle cx="20.5" cy="7.2" r="1"/>',
+'<path d="M8 3h8l3 4v10l-3 4H8l-3-4V7z"/>',
+'<circle cx="9" cy="7" r="2"/><circle cx="14" cy="6" r="2"/><circle cx="12" cy="9" r="2"/><path d="M12 11v9"/>',
+'<path d="M5 19L15 9"/><path d="M15 3a5 5 0 0 1-6 8"/>',
+'<path d="M4 6l4 3-3 3 5 2-3 4 6 2"/>',
+'<path d="M3 10q3-3 6 0M13 8q3-3 6 0"/>',
+'<circle cx="12" cy="6" r="2.3"/><path d="M12 8.3v6M9 12h6M9 20l3-5 3 5"/>',
+'<path d="M6 16l3-9 3 4 3-4 3 9z"/><path d="M9 16h6"/>',
+'<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="12" cy="10" r="4"/><path d="M8 14q4 4 8 0"/>',
+'<path d="M12 2l3 7 7 1-5.2 4.7L18 22l-6-3.6L6 22l1.2-7.3L2 10l7-1z"/>',
+'<circle cx="12" cy="6" r="2"/><path d="M12 8v8M9 20l3-4 3 4M8 6H5"/>',
+'<path d="M5 10l2-4 3 2 2-2 2 2 3-2 2 4"/><path d="M6 10v6h12v-6"/>',
+'<path d="M9 21V9l3-5 3 5v12"/><path d="M7 21h10"/><path d="M9 13h6"/>',
+'<circle cx="4" cy="14" r="1.3"/><circle cx="9" cy="11" r="1.3"/><circle cx="14" cy="13" r="1.3"/><circle cx="19" cy="10" r="1.3"/><path d="M4 15v5M9 12v8M14 14v6M19 11v9"/>',
+'<path d="M3 18l6-10 4 6 3-4 5 8z"/>',
+'<path d="M12 3v8M6 21l6-10 6 10"/>',
+'<ellipse cx="8" cy="14" rx="3" ry="2"/><path d="M5 14q-3-1-3 1"/><ellipse cx="15" cy="12" rx="3" ry="2"/><path d="M18 12q3-1 3 1"/>',
+'<path d="M12 20s-7-4.4-7-9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7 3.5C19 15.6 12 20 12 20z"/>',
+'<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3"/>',
+'<path d="M4 5h7v14H4zM20 5h-7v14h7z"/>',
+'<path d="M4 6h16v12H4z"/><path d="M4 6l8 7 8-7"/>',
+'<circle cx="12" cy="6" r="2.3"/><path d="M7 20l5-9 5 9M9 14h6"/>',
+'<circle cx="12" cy="6" r="2.3"/><path d="M8 20l4-11 4 11"/>',
+'<path d="M12 20V9"/><path d="M12 9c-3 0-5-2-5-5 3 0 5 2 5 5zm0 0c3 0 5-2 5-5-3 0-5 2-5 5z"/>',
+'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2 2M17.8 17.8l2 2M2 12h3M19 12h3M4.2 19.8l2-2M17.8 6.2l2-2"/>',
+'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+'<circle cx="7" cy="12" r="3"/><path d="M10 12h11M17 12v4M20 12v3"/>',
+'<path d="M3 12c4-4 12-4 16 0-4 4-12 4-16 0z"/><path d="M19 12l3-2v4z"/>',
+'<circle cx="12" cy="5" r="2"/><path d="M12 7v13M7 14a5 5 0 0 0 10 0M5 14H3M21 14h-2"/>',
+'<path d="M12 3v18M6 9h12"/>'
+];
+const LEN_NAMES = ["Rider","Clover","Ship","House","Tree","Clouds","Snake","Coffin","Bouquet","Scythe",
+"Whip","Birds","Child","Fox","Bear","Stars","Stork","Dog","Tower","Garden","Mountain","Crossroad","Mice",
+"Heart","Ring","Book","Letter","Man","Woman","Lily","Sun","Moon","Key","Fish","Anchor","Cross"];
+const LENORMAND_DECK = LEN_NAMES.map((n,i)=>({
+  id:"len_"+(i+1), name:`${i+1}. ${n}`,
+  fallback:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">${LEN_PATHS[i]}</svg>`,
+  img:`assets/lenormand/${i+1}_${n.toLowerCase()}.jpg`
+}));
+
+/* ===================== I-CHING ENGINE ===================== */
+const TRI_PATTERNS=[[1,1,1],[1,1,0],[1,0,1],[1,0,0],[0,1,1],[0,1,0],[0,0,1],[0,0,0]];
+const HEX_MATRIX = [
+  [1,43,14,34,9,5,26,11],[10,58,38,54,61,60,41,19],[13,49,30,55,37,63,22,36],[25,17,21,51,42,3,27,24],
+  [44,28,50,32,57,48,18,46],[6,47,64,40,59,29,4,7],[33,31,56,62,53,39,52,15],[12,45,35,16,20,8,23,2]
+];
+const HEX_NAMES = ["","乾","坤","屯","蒙","需","訟","師","比","小畜","履","泰","否","同人","大有","謙","豫","隨","蠱","臨","觀",
+"噬嗑","賁","剝","復","無妄","大畜","頤","大過","坎","離","咸","恆","遯","大壯","晉","明夷","家人","睽","蹇","解","損","益",
+"夬","姤","萃","升","困","井","革","鼎","震","艮","漸","歸妹","豐","旅","巽","兌","渙","節","中孚","小過","既濟","未濟"];
+function triIdx(bits){ for(let i=0;i<8;i++){ if(TRI_PATTERNS[i][0]===bits[0]&&TRI_PATTERNS[i][1]===bits[1]&&TRI_PATTERNS[i][2]===bits[2]) return i; } return 0; }
+function hexNumber(lines){ const lower=triIdx([lines[0],lines[1],lines[2]]); const upper=triIdx([lines[3],lines[4],lines[5]]); return HEX_MATRIX[lower][upper]; }
+function hexNameOf(lines){ const n=hexNumber(lines); return n+' '+HEX_NAMES[n]; }
+function futureLinesOf(lines, changing){ return lines.map((l,i)=> changing[i] ? (1-l) : l); }
+
+/* ===================== STORAGE ===================== */
+const STORE_KEY = "kinoastro_data_v2";
+function loadData(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {askers:[]}; } catch(e){ return {askers:[]}; } }
+function saveData(d){ localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+let DATA = loadData();
+let VIEW = {page:"home", askerId:null, sessionId:null, draft:null};
+let clockInterval = null;
+
+/* ===================== ICONS ===================== */
+const ICONS_RAW = {
+  sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2 2M17.8 17.8l2 2M2 12h3M19 12h3M4.2 19.8l2-2M17.8 6.2l2-2"/></svg>`,
+  moon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3 7 7 1-5.2 4.7L18 22l-6-3.6L6 22l1.2-7.3L2 10l7-1z"/></svg>`,
+  world:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/></svg>`,
+  cloud:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/></svg>`,
+  folder:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h6l2 2h10v11H3z"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`,
+  download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>`
+};
+const ICONS = ICONS_RAW;
+function iconSm(name){ return `<span class="icon-sm">${ICONS[name]}</span>`; }
+
+const TAROT_DECK = buildTarot();
+function tarotGroups(){
+  return [
+    {label:t('groupMajor'), items:TAROT_DECK.slice(0,22)},
+    {label:t('groupWands'), items:TAROT_DECK.slice(22,36)},
+    {label:t('groupCups'), items:TAROT_DECK.slice(36,50)},
+    {label:t('groupSwords'), items:TAROT_DECK.slice(50,64)},
+    {label:t('groupPentacles'), items:TAROT_DECK.slice(64,78)}
+  ];
+}
+
+/* decorative floating clouds */
+(function initClouds(){
+  const layer = document.getElementById('cloudLayer');
+  for(let i=0;i<6;i++){
+    const size = 60+Math.random()*90, top=Math.random()*90, left=Math.random()*90, dur=40+Math.random()*40;
+    const el = document.createElement('div');
+    el.style.position='absolute'; el.style.top=top+'%'; el.style.left=left+'%';
+    el.innerHTML = `<svg width="${size}" height="${size*0.5}" viewBox="0 0 100 50"><path d="M20 40 Q10 40 10 30 Q10 18 25 18 Q28 8 42 8 Q58 8 60 20 Q75 18 78 30 Q80 40 68 40Z" fill="white" opacity="0.5"/></svg>`;
+    el.style.animation = `drift ${dur}s linear infinite`;
+    layer.appendChild(el);
+  }
+  const style = document.createElement('style');
+  style.innerHTML = `@keyframes drift{0%{transform:translateX(0)}50%{transform:translateX(30px)}100%{transform:translateX(0)}}`;
+  document.head.appendChild(style);
+})();
+
+/* decorative cloud cursor trail (pointer devices only) */
+(function initCursorCloud(){
+  if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  const cloud = document.createElement('div'); cloud.id='cursorCloud';
+  cloud.innerHTML = `<svg width="46" height="23" viewBox="0 0 100 50"><path d="M20 40 Q10 40 10 30 Q10 18 25 18 Q28 8 42 8 Q58 8 60 20 Q75 18 78 30 Q80 40 68 40Z" fill="white" stroke="#B7C9DA" stroke-width="2"/></svg>`;
+  document.body.appendChild(cloud);
+  let mx=innerWidth/2, my=innerHeight/2, cx=mx, cy=my;
+  document.addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; });
+  function loop(){
+    cx += (mx-cx)*0.15; cy += (my-cy)*0.15;
+    cloud.style.transform = `translate(${cx-23}px, ${cy-14}px)`;
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ===================== SPLASH ===================== */
+function showSplash(){
+  const el=document.createElement('div'); el.id='splash';
+  el.innerHTML = `<div class="splash-inner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/></svg>
+    <div class="splash-title">WIND</div><div class="splash-sub">a quiet reading journal</div></div>`;
+  document.body.appendChild(el);
+  const hide = ()=>{ el.classList.add('fade-out'); setTimeout(()=> el.remove(), 800); };
+  setTimeout(hide, 3400);
+  el.addEventListener('click', hide);
+}
+
+/* ===================== LAYOUTS ===================== */
+const LAYOUT_DEFS = {
+  single:{positions:['Reading'], cells:[[1,1]], cols:1, rows:1},
+  three:{positions:['Past','Present','Future'], cells:[[1,1],[1,2],[1,3]], cols:3, rows:1},
+  vshape:{positions:['Choice A · Progress','Choice A · Result','Crossroad','Choice B · Progress','Choice B · Result'],
+    cells:[[2,1],[1,1],[3,2],[2,3],[1,3]], cols:3, rows:3},
+  lovertree:{positions:['Outside Influence','Your Feelings','Their Feelings','Trunk / Current','Obstacles','Outcome / Fruit','Roots'],
+    cells:[[1,2],[2,1],[2,3],[3,2],[4,1],[4,3],[5,2]], cols:3, rows:5},
+  grandcross:{positions:['Present','Challenge','Past','Future','Crown / Goal','Foundation','Self','Environment','Hopes & Fears','Outcome'],
+    cells:[[2,2],[3,2],[2,1],[2,3],[1,2],[4,2],[1,4],[2,4],[3,4],[4,4]], cols:4, rows:4}
+};
+const LAYOUT_KEYS = ['single','three','vshape','lovertree','grandcross','custom'];
+function defaultPositions(layoutKey){ return LAYOUT_DEFS[layoutKey] ? LAYOUT_DEFS[layoutKey].positions.slice() : []; }
+function defaultCustomPos(i){ const angle=(i*67)%360; const rad=angle*Math.PI/180; return {x:50+35*Math.cos(rad), y:50+30*Math.sin(rad)}; }
+
+/* ===================== ROUTER ===================== */
+function render(){
+  document.getElementById('brandSub').textContent = t('brandSub');
+  document.getElementById('footerText').textContent = t('footer');
+  applyTheme();
+  const app = document.getElementById('app');
+  if(VIEW.page==='home') app.innerHTML = renderHome();
+  else if(VIEW.page==='asker') app.innerHTML = renderAsker();
+  else if(VIEW.page==='builder') app.innerHTML = renderBuilder();
+  else if(VIEW.page==='view') app.innerHTML = renderSessionView();
+  attachHandlers();
+
+  if(clockInterval) clearInterval(clockInterval);
+  if(VIEW.page==='home'){
+    clockInterval = setInterval(()=>{
+      const el = document.getElementById('liveClock');
+      if(el){ const now=new Date(); el.textContent = now.toLocaleTimeString(LANG==='en'?'en-GB':undefined,{hour:'2-digit',minute:'2-digit'}); }
+    }, 15000);
+  }
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const askers = DATA.askers.slice().sort((a,b)=> lastDate(b)-lastDate(a));
+  return `
+  ${renderTodayWidget()}
+  <div class="glass">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="display:flex;align-items:center;gap:7px;font-size:1rem;">${iconSm('folder')} ${t('askersTitle')}</h2>
+      <button class="btn" id="newAskerBtn">${ICONS.plus} ${t('newAsker')}</button>
+    </div>
+    <input id="searchAsker" placeholder="${t('searchAsker')}" style="max-width:240px;">
+  </div>
+  <div class="grid" id="askerGrid">
+    ${askers.length? askers.map(a=>`
+      <div class="folder" data-id="${a.id}">
+        <div class="folder-icon">${ICONS.folder}</div>
+        <h3>${escapeHtml(a.name)}</h3>
+        <div class="meta">${a.sessions.length} ${t('sessionsCount')} · ${t('lastSession')}: ${lastDate(a)?new Date(lastDate(a)).toLocaleDateString():'—'}</div>
+      </div>`).join('') : `<div class="meta glass" style="text-align:center;">${t('noAskers')}</div>`}
+  </div>`;
+}
+function lastDate(a){ return a.sessions.length? Math.max(...a.sessions.map(s=>s.updatedAt||s.createdAt)) : 0; }
+
+/* ---------- ASKER PAGE ---------- */
+function renderAsker(){
+  const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+  if(!asker) return `<div class="glass">${t('askerNotFound')} <button class="btn light" id="backHome">${t('backBtn')}</button></div>`;
+  const sessions = asker.sessions.slice().sort((a,b)=>(b.updatedAt||b.createdAt)-(a.updatedAt||a.createdAt));
+  return `
+  <button class="btn light" id="backHome">${t('backAll')}</button>
+  <div class="glass" style="margin-top:12px;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="font-size:1rem;">${escapeHtml(asker.name)}</h2>
+      <div class="row">
+        <button class="btn" id="newSessionBtn">${ICONS.plus} ${t('newSession')}</button>
+        <button class="btn danger" id="deleteAskerBtn">${ICONS.trash} ${t('deleteAsker')}</button>
+      </div>
+    </div>
+    <textarea id="askerNotes" placeholder="${t('askerNotesPh')}">${escapeHtml(asker.notes||'')}</textarea>
+  </div>
+  <div class="glass">
+    <h3 style="font-size:0.92rem;">${t('sessionsTitle')}</h3>
+    ${sessions.length? sessions.map(s=>`
+      <div class="session-item" data-id="${s.id}">
+        <div>
+          <strong>${escapeHtml((s.questions&&s.questions[0]&&s.questions[0].text)||t('untitled'))}</strong>
+          <div class="meta">${new Date(s.updatedAt||s.createdAt).toLocaleString()}</div>
+        </div>
+        <span class="tag">${sessionTags(s)}</span>
+      </div>`).join('') : `<div class="meta">${t('noSessions')}</div>`}
+  </div>`;
+}
+function sessionTags(s){
+  const set = new Set();
+  (s.questions||[]).forEach(q=>{
+    if(q.includeTarot) set.add(t('tarot'));
+    if(q.includeLenormand) set.add(t('lenormand'));
+    if(q.includeIching) set.add(t('iching'));
+  });
+  return [...set].join(' + ') || 'draft';
+}
+
+/* ---------- BUILDER ---------- */
+function newIching(){ return {lines:[1,1,1,1,1,1], changing:[false,false,false,false,false,false], readingCurrent:'', readingFuture:''}; }
+function newQuestion(){
+  return {
+    id:'q_'+Date.now()+Math.random().toString(36).slice(2,6), text:'', category:'catPersonal',
+    tarotLayout:'three', lenormandLayout:'three',
+    tarotPositions: defaultPositions('three'), lenormandPositions: defaultPositions('three'),
+    tarotCustomPos:[], lenormandCustomPos:[],
+    includeTarot:true, includeLenormand:false, includeIching:false,
+    tarotCards:[], lenormandCards:[], lenormandExplanation:'',
+    iching: newIching(), summary:''
+  };
+}
+function newDraft(existing){
+  return existing ? JSON.parse(JSON.stringify(existing)) : {
+    id:'s_'+Date.now(), questions:[newQuestion()], summary:'', createdAt:Date.now(), updatedAt:Date.now()
+  };
+}
+function ensureSlotsMatchLayout(q, field){
+  const layoutKey = field==='tarot'? q.tarotLayout : q.lenormandLayout;
+  const cardsArr = field==='tarot'? q.tarotCards : q.lenormandCards;
+  const customPos = field==='tarot'? q.tarotCustomPos : q.lenormandCustomPos;
+  if(layoutKey!=='custom'){
+    const preset = defaultPositions(layoutKey);
+    if(field==='tarot'){ q.tarotPositions = preset; } else { q.lenormandPositions = preset; }
+    const target = preset.length;
+    while(cardsArr.length < target) cardsArr.push({cardId:'', reversed:false, reading:''});
+    cardsArr.length = target;
+  } else {
+    while(customPos.length < cardsArr.length) customPos.push(defaultCustomPos(customPos.length));
+  }
+}
+
+function renderBuilder(){
+  const d = VIEW.draft;
+  return `
+  <button class="btn light" id="backToAsker">${t('backBtn')}</button>
+  <div style="margin-top:12px;">
+    <div class="row" style="justify-content:space-between;">
+      <h3 style="font-size:0.95rem;">${t('questions')}</h3>
+      <button class="btn light tiny" id="addQuestionBtn">${t('addQuestion')}</button>
+    </div>
+    ${d.questions.map((q,qi)=>renderQuestionBlock(q,qi)).join('')}
+  </div>
+  <div class="glass">
+    <h3 style="font-size:0.92rem;">${iconSm('star')} ${t('finalSummaryTitle')}</h3>
+    <label>${t('finalSummaryLabel')}</label>
+    <textarea id="summaryInput" placeholder="${t('finalSummaryPh')}">${escapeHtml(d.summary)}</textarea>
+  </div>
+  <div class="row">
+    <button class="btn" id="saveSessionBtn">${t('saveSession')}</button>
+    <button class="btn light" id="exportPdfBtn">${ICONS.download} ${t('exportPdf')}</button>
+  </div>`;
+}
+
+function renderQuestionBlock(q, qi){
+  return `<div class="q-block" data-qidx="${qi}">
+    <div class="row" style="justify-content:space-between;">
+      <label style="margin:0;">${t('questionLabel')} ${qi+1}</label>
+      ${qi>0?`<button class="remove-slot" data-removeq="${qi}">${t('removeQuestion')}</button>`:''}
+    </div>
+    <input class="qTextInput" data-qidx="${qi}" value="${escapeAttr(q.text)}" placeholder="${t('questionPh')}">
+    <label>${t('categoryLabel')}</label>
+    <select class="qCategorySelect" data-qidx="${qi}">
+      ${CATEGORY_KEYS.map(ck=>`<option value="${ck}" ${q.category===ck?'selected':''}>${t(ck)}</option>`).join('')}
+    </select>
+
+    <div class="toggle-row">
+      <label><input type="checkbox" class="chkTarot" data-qidx="${qi}" ${q.includeTarot?'checked':''}> ${t('tarot')}</label>
+      <label><input type="checkbox" class="chkLen" data-qidx="${qi}" ${q.includeLenormand?'checked':''}> ${t('lenormand')}</label>
+      <label><input type="checkbox" class="chkIching" data-qidx="${qi}" ${q.includeIching?'checked':''}> ${t('iching')}</label>
+    </div>
+
+    ${q.includeTarot? sectionCardSet(q,qi,'tarot'): ''}
+    ${q.includeLenormand? sectionCardSet(q,qi,'lenormand'): ''}
+    ${q.includeIching? sectionIching(q,qi): ''}
+
+    <label>${t('questionSummaryLabel')}</label>
+    <textarea class="qSummaryInput" data-qidx="${qi}" placeholder="${t('questionSummaryPh')}">${escapeHtml(q.summary)}</textarea>
+  </div>`;
+}
+
+function poolChipsHtml(field, qi){
+  if(field==='tarot'){
+    return tarotGroups().map(g=>`
+      <div class="pool-group-label">${escapeHtml(g.label)}</div>
+      ${g.items.map(c=>`<div class="chip" draggable="true" data-cardid="${c.id}" data-drag="${field}:${qi}">${c.name}</div>`).join('')}
+    `).join('');
+  }
+  return LENORMAND_DECK.map(c=>`<div class="chip" draggable="true" data-cardid="${c.id}" data-drag="${field}:${qi}">${c.name}</div>`).join('');
+}
+
+function sectionCardSet(q, qi, field){
+  const deck = field==='tarot'? TAROT_DECK : LENORMAND_DECK;
+  const layoutKey = field==='tarot'? q.tarotLayout : q.lenormandLayout;
+  const positions = field==='tarot'? q.tarotPositions : q.lenormandPositions;
+  const cards = field==='tarot'? q.tarotCards : q.lenormandCards;
+  const customPos = field==='tarot'? q.tarotCustomPos : q.lenormandCustomPos;
+  const icon = field==='tarot'? 'star' : 'cloud';
+
+  let spreadHtml;
+  if(layoutKey==='custom'){
+    spreadHtml = `<div class="custom-canvas" data-canvas="${field}:${qi}">
+      ${positions.map((pname,pi)=>{
+        const pos = customPos[pi] || defaultCustomPos(pi);
+        const style = `left:${pos.x}%; top:${pos.y}%;`;
+        return renderSlot(field, qi, pi, pname, cards[pi]||{cardId:'',reversed:false,reading:''}, deck, layoutKey, style, true);
+      }).join('')}
+    </div>`;
+  } else {
+    const def = LAYOUT_DEFS[layoutKey];
+    spreadHtml = `<div class="spread-grid" style="grid-template-columns:repeat(${def.cols},1fr); grid-template-rows:repeat(${def.rows},auto);">
+      ${positions.map((pname,pi)=>{
+        const [r,c] = def.cells[pi];
+        const style = `grid-row:${r}; grid-column:${c};`;
+        return renderSlot(field, qi, pi, pname, cards[pi]||{cardId:'',reversed:false,reading:''}, deck, layoutKey, style, false);
+      }).join('')}
+    </div>`;
+  }
+
+  return `<div class="section-block" data-field="${field}" data-qidx="${qi}">
+    <h4 style="margin:10px 0 6px; font-size:0.85rem; display:flex; align-items:center; gap:6px;">${iconSm(icon)} ${t(field)}</h4>
+    <div class="layout-grid">
+      ${LAYOUT_KEYS.map(k=>`<div class="layout-opt ${layoutKey===k?'active':''}" data-setlayout="${field}:${qi}:${k}">${t('layout'+capitalize(k))}</div>`).join('')}
+    </div>
+    ${layoutKey==='custom'? `<button class="btn light tiny" data-addpos="${field}:${qi}">${t('addPosition')}</button>`:''}
+
+    <div class="pool-wrap">
+      <input class="pool-search" data-poolsearch="${field}:${qi}" placeholder="${t('searchCardPh')}">
+      <div class="pool-chips" data-pool="${field}:${qi}">${poolChipsHtml(field,qi)}</div>
+    </div>
+
+    ${spreadHtml}
+
+    ${field==='lenormand'? `<label>${t('lenormandSetExplanationPh')}</label><textarea class="lenExplain" data-qidx="${qi}" placeholder="${t('lenormandSetExplanationPh')}">${escapeHtml(q.lenormandExplanation||'')}</textarea>` : ''}
+  </div>`;
+}
+
+function renderSlot(field, qi, pi, pname, card, deck, layoutKey, cellStyle, isFree){
+  const item = deck.find(dc=>dc.id===card.cardId);
+  const wrapStyle = isFree ? cellStyle : cellStyle;
+  return `<div class="slot ${isFree?'free-slot':''}" data-slotfield="${field}" data-qidx="${qi}" data-pidx="${pi}" style="${wrapStyle}">
+    ${isFree? `<div class="drag-handle" data-draghandle="${field}:${qi}:${pi}">${t('dragHandleHint')}</div>` : ''}
+    <input class="slot-name-input" data-posname="${field}:${qi}:${pi}" value="${escapeAttr(pname)}" style="font-size:0.65rem; padding:4px 6px; margin-bottom:5px;">
+    <div class="card-img-wrap ${card.reversed?'reversed':''}">
+      ${item? `<img src="${item.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+      <div style="display:${item?'none':'flex'}; width:100%; height:100%; align-items:center; justify-content:center;">${item? item.fallback : ICONS.star}</div>
+    </div>
+    <div class="card-name">${item? item.name : t('dropHint')}</div>
+    ${field==='tarot' && item? `
+      <button class="mini-btn ${!card.reversed?'active':''}" data-reverse="${field}:${qi}:${pi}:0">${t('uprightBtn')}</button>
+      <button class="mini-btn ${card.reversed?'active':''}" data-reverse="${field}:${qi}:${pi}:1">${t('reversedBtn')}</button>
+      <textarea class="slot-reading" data-reading="${field}:${qi}:${pi}" placeholder="${t('readingPh')}">${escapeHtml(card.reading||'')}</textarea>
+    ` : ''}
+    ${layoutKey==='custom'? `<div><button class="remove-slot" data-removepos="${field}:${qi}:${pi}">✕</button></div>`:''}
+  </div>`;
+}
+
+function hexDiagram(lines, changing, staticOnly, qi){
+  return lines.slice().reverse().map((l,ri)=>{
+    const i = 5-ri;
+    const isChanging = changing && changing[i];
+    const barCls = `hexbar ${l===0?'broken':''} ${staticOnly?'static':''}`;
+    const bar = staticOnly ? `<div class="${barCls}"></div>` : `<div class="${barCls}" data-hexline="${qi}:${i}"></div>`;
+    return `<div class="hexrow">${bar}<span class="hexmark">${isChanging?'●':''}</span></div>`;
+  }).join('');
+}
+function sectionIching(q, qi){
+  const hex = q.iching;
+  const fLines = futureLinesOf(hex.lines, hex.changing);
+  const hasChange = hex.changing.some(Boolean);
+  return `<div class="section-block">
+    <h4 style="margin:10px 0 6px; font-size:0.85rem; display:flex; align-items:center; gap:6px;">${iconSm('moon')} ${t('iching')}</h4>
+    <div class="small-note">${t('hexHint')}</div>
+    <div class="hex-example">${t('hexExample')}</div>
+    <div class="hex-pair">
+      <div class="hex-col">
+        <div class="hex-label">${t('hexPresent')} · ${escapeHtml(hexNameOf(hex.lines))}</div>
+        <div class="hexline">${hexDiagram(hex.lines, hex.changing, false, qi)}</div>
+      </div>
+      <div class="hex-col">
+        <div class="hex-label">${t('hexFuture')} · ${hasChange? escapeHtml(hexNameOf(fLines)) : t('hexNoChange')}</div>
+        <div class="hexline">${hexDiagram(fLines, null, true, qi)}</div>
+      </div>
+    </div>
+    <textarea class="hexReadingCurrent" data-qidx="${qi}" placeholder="${t('hexReadingCurrentPh')}">${escapeHtml(hex.readingCurrent||'')}</textarea>
+    <textarea class="hexReadingFuture" data-qidx="${qi}" placeholder="${t('hexReadingFuturePh')}">${escapeHtml(hex.readingFuture||'')}</textarea>
+  </div>`;
+}
+
+/* ---------- SESSION VIEW ---------- */
+function renderSessionView(){
+  const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+  const s = asker.sessions.find(x=>x.id===VIEW.sessionId);
+  return `
+  <button class="btn light" id="backToAsker">${t('backBtn')}</button>
+  <div style="margin-top:12px;">${sessionPrintable(asker,s)}</div>
+  <div class="row" style="margin-top:14px;">
+    <button class="btn" id="editSessionBtn">${t('editSession')}</button>
+    <button class="btn light" id="exportPdfBtn2">${ICONS.download} ${t('exportPdf')}</button>
+  </div>`;
+}
+function pdfCardImgHtml(item, reversed, C){
+  if(!item) return '';
+  const fb = item.fallback.replace(/currentColor/g, C.grey2);
+  return `<div style="width:70px;height:95px;border-radius:8px;overflow:hidden;background:${C.sky2};display:flex;align-items:center;justify-content:center;flex-shrink:0;${reversed?'transform:rotate(180deg);':''}">
+    <img src="${item.img}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div style="display:none; width:36px; height:36px; align-items:center; justify-content:center;">${fb}</div>
+  </div>`;
+}
+function sessionPrintable(asker, s){
+  const C = THEME_COLORS[THEME];
+  const questionsHtml = (s.questions||[]).map((q,qi)=>{
+    const cardBlock = (title, positions, cards, deck, combined)=>{
+      if(!cards || !cards.length || !cards.some(c=>c.cardId)) return '';
+      const rows = positions.map((pname,pi)=>{
+        const c = cards[pi]||{}; const item = deck.find(dc=>dc.id===c.cardId);
+        if(!item) return '';
+        return `<div style="display:flex; gap:10px; margin-bottom:8px; align-items:flex-start;">
+          ${pdfCardImgHtml(item, c.reversed, C)}
+          <div><strong>${escapeHtml(pname)}: ${item.name}${c.reversed?(' ('+t('reversedBtn')+')'):''}</strong>
+          ${c.reading? `<p style="margin:2px 0;">${escapeHtml(c.reading)}</p>`:''}</div>
+        </div>`;
+      }).join('');
+      return `<h4 style="color:${C.ink};">${escapeHtml(title)}</h4>${rows}${combined? `<p><em>${escapeHtml(combined)}</em></p>`:''}`;
+    };
+    let hexBlock = '';
+    if(q.includeIching && q.iching){
+      const hex = q.iching; const fLines = futureLinesOf(hex.lines, hex.changing); const hasChange = hex.changing.some(Boolean);
+      hexBlock = `<h4 style="color:${C.ink};">${t('iching')}</h4>
+        <div style="display:flex; gap:24px;">
+          <div><div style="font-size:0.8rem;font-weight:700;color:${C.ink};">${t('hexPresent')} · ${escapeHtml(hexNameOf(hex.lines))}</div>
+            <div class="hexline">${hexDiagram(hex.lines, hex.changing, true)}</div></div>
+          <div><div style="font-size:0.8rem;font-weight:700;color:${C.ink};">${t('hexFuture')} · ${hasChange? escapeHtml(hexNameOf(fLines)) : t('hexNoChange')}</div>
+            <div class="hexline">${hexDiagram(fLines, null, true)}</div></div>
+        </div>
+        ${hex.readingCurrent? `<p>${escapeHtml(hex.readingCurrent)}</p>`:''}
+        ${hex.readingFuture? `<p><em>${escapeHtml(hex.readingFuture)}</em></p>`:''}`;
+    }
+    return `<div style="margin-top:16px; padding-top:12px; border-top:1px dashed ${C.border};">
+      <p style="color:${C.ink};"><strong>${t('questionLabel')} ${qi+1}</strong> <span style="font-size:0.72rem; color:${C.grey2};">(${t(q.category||'catPersonal')})</span>: ${escapeHtml(q.text||'—')}</p>
+      ${q.includeTarot? cardBlock(t('tarot'), q.tarotPositions, q.tarotCards, TAROT_DECK, ''):''}
+      ${q.includeLenormand? cardBlock(t('lenormand'), q.lenormandPositions, q.lenormandCards, LENORMAND_DECK, q.lenormandExplanation):''}
+      ${hexBlock}
+      ${q.summary? `<p style="color:${C.ink};"><strong>${t('questionSummaryLabel')}:</strong> ${escapeHtml(q.summary)}</p>`:''}
+    </div>`;
+  }).join('');
+  return `<div id="printable" style="font-family:'M PLUS Rounded 1c','Quicksand','Segoe UI',sans-serif; background:${C.cream}; color:${C.ink}; border-radius:18px; padding:22px; border:1px solid ${C.border};">
+    <div style="margin-bottom:8px; font-size:0.9rem; letter-spacing:3px; color:${C.grey2}; font-weight:700;">WIND</div>
+    <h2 style="font-size:1.1rem; color:${C.ink}; margin:0 0 4px;">${escapeHtml(asker.name)}</h2>
+    <p style="font-size:0.7rem; color:${C.grey2};">${new Date(s.updatedAt||s.createdAt).toLocaleString()}</p>
+    ${questionsHtml}
+    <div style="margin-top:16px; padding-top:12px; border-top:1px dashed ${C.border};">
+      <h4 style="color:${C.ink};">${t('summaryLabel')}</h4>
+      <p style="color:${C.ink};">${escapeHtml(s.summary||'—')}</p>
+    </div>
+  </div>`;
+}
+
+/* ===================== HANDLERS ===================== */
+function attachHandlers(){
+  const $ = sel=>document.querySelector(sel);
+  const $$ = sel=>document.querySelectorAll(sel);
+
+  document.getElementById('themeLight').onclick=()=>{ THEME='light'; localStorage.setItem('kinoastro_theme',THEME); render(); };
+  document.getElementById('themeDark').onclick=()=>{ THEME='dark'; localStorage.setItem('kinoastro_theme',THEME); render(); };
+
+  const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu');
+  langBtn.onclick=(e)=>{ e.stopPropagation(); langMenu.style.display = langMenu.style.display==='none'?'block':'none'; };
+  $$('.lang-menu div').forEach(el=> el.onclick=()=>{ LANG=el.dataset.lang; localStorage.setItem('kinoastro_lang',LANG); render(); });
+  document.getElementById('settingsBtn').onclick=(e)=>{ e.stopPropagation(); showSettingsModal(); };
+  document.addEventListener('click', ()=>{ langMenu.style.display='none'; }, {once:true});
+
+  if($('#newAskerBtn')) $('#newAskerBtn').onclick=()=>{
+    const name = prompt(t('askerNamePrompt')); if(!name) return;
+    const asker = {id:'a_'+Date.now(), name, notes:'', sessions:[]};
+    DATA.askers.push(asker); saveData(DATA);
+    VIEW={page:'asker', askerId:asker.id}; render();
+  };
+  if($('#searchAsker')) $('#searchAsker').oninput=(e)=>{
+    const q=e.target.value.toLowerCase();
+    $$('.folder').forEach(f=>{
+      const asker = DATA.askers.find(a=>a.id===f.dataset.id);
+      f.style.display = asker.name.toLowerCase().includes(q)?'':'none';
+    });
+  };
+  $$('.folder').forEach(f=> f.onclick=()=>{ VIEW={page:'asker', askerId:f.dataset.id}; render(); });
+  if($('#backHome')) $('#backHome').onclick=()=>{ VIEW={page:'home'}; render(); };
+  if($('#backToAsker')) $('#backToAsker').onclick=()=>{ VIEW.page='asker'; VIEW.draft=null; render(); };
+
+  if($('#newSessionBtn')) $('#newSessionBtn').onclick=()=>{ VIEW.draft = newDraft(null); VIEW.page='builder'; render(); };
+  $$('.session-item').forEach(el=> el.onclick=()=>{
+    const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+    const s = asker.sessions.find(x=>x.id===el.dataset.id);
+    VIEW.sessionId = s.id; VIEW.page='view'; render();
+  });
+  if($('#editSessionBtn')) $('#editSessionBtn').onclick=()=>{
+    const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+    const s = asker.sessions.find(x=>x.id===VIEW.sessionId);
+    VIEW.draft = newDraft(s); VIEW.page='builder'; render();
+  };
+  if($('#deleteAskerBtn')) $('#deleteAskerBtn').onclick=()=> showDeleteModal();
+  if($('#askerNotes')) $('#askerNotes').onchange=(e)=>{
+    const asker = DATA.askers.find(a=>a.id===VIEW.askerId); asker.notes = e.target.value; saveData(DATA);
+  };
+
+  if($('#addQuestionBtn')) $('#addQuestionBtn').onclick=()=>{ VIEW.draft.questions.push(newQuestion()); render(); };
+  $$('[data-removeq]').forEach(btn=> btn.onclick=()=>{ VIEW.draft.questions.splice(+btn.dataset.removeq,1); render(); });
+  $$('.qTextInput').forEach(el=> el.oninput=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].text = e.target.value; });
+  $$('.qCategorySelect').forEach(el=> el.onchange=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].category = e.target.value; });
+  $$('.chkTarot').forEach(el=> el.onchange=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].includeTarot = e.target.checked; render(); });
+  $$('.chkLen').forEach(el=> el.onchange=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].includeLenormand = e.target.checked; render(); });
+  $$('.chkIching').forEach(el=> el.onchange=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].includeIching = e.target.checked; render(); });
+
+  $$('[data-setlayout]').forEach(el=> el.onclick=()=>{
+    const [field, qi, key] = el.dataset.setlayout.split(':');
+    const q = VIEW.draft.questions[+qi];
+    if(field==='tarot') q.tarotLayout = key; else q.lenormandLayout = key;
+    ensureSlotsMatchLayout(q, field); render();
+  });
+  $$('[data-addpos]').forEach(el=> el.onclick=()=>{
+    const [field, qi] = el.dataset.addpos.split(':');
+    const q = VIEW.draft.questions[+qi];
+    const name = prompt(t('positionNamePh')) || t('positionNamePh');
+    if(field==='tarot'){ q.tarotPositions.push(name); q.tarotCards.push({cardId:'',reversed:false,reading:''}); q.tarotCustomPos.push(defaultCustomPos(q.tarotPositions.length-1)); }
+    else { q.lenormandPositions.push(name); q.lenormandCards.push({cardId:'',reversed:false,reading:''}); q.lenormandCustomPos.push(defaultCustomPos(q.lenormandPositions.length-1)); }
+    render();
+  });
+  $$('[data-removepos]').forEach(el=> el.onclick=()=>{
+    const [field, qi, pi] = el.dataset.removepos.split(':');
+    const q = VIEW.draft.questions[+qi];
+    if(field==='tarot'){ q.tarotPositions.splice(+pi,1); q.tarotCards.splice(+pi,1); q.tarotCustomPos.splice(+pi,1); }
+    else { q.lenormandPositions.splice(+pi,1); q.lenormandCards.splice(+pi,1); q.lenormandCustomPos.splice(+pi,1); }
+    render();
+  });
+  $$('.slot-name-input').forEach(el=> el.oninput=(e)=>{
+    const [field, qi, pi] = el.dataset.posname.split(':');
+    const q = VIEW.draft.questions[+qi];
+    if(field==='tarot') q.tarotPositions[+pi] = e.target.value; else q.lenormandPositions[+pi] = e.target.value;
+  });
+  $$('[data-reverse]').forEach(el=> el.onclick=()=>{
+    const [field, qi, pi, val] = el.dataset.reverse.split(':');
+    const q = VIEW.draft.questions[+qi];
+    const arr = field==='tarot'? q.tarotCards : q.lenormandCards;
+    arr[+pi].reversed = (val==='1'); render();
+  });
+  $$('.slot-reading').forEach(el=> el.oninput=(e)=>{
+    const [field, qi, pi] = el.dataset.reading.split(':');
+    const q = VIEW.draft.questions[+qi];
+    const arr = field==='tarot'? q.tarotCards : q.lenormandCards;
+    arr[+pi].reading = e.target.value;
+  });
+  $$('.lenExplain').forEach(el=> el.oninput=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].lenormandExplanation = e.target.value; });
+  $$('.qSummaryInput').forEach(el=> el.oninput=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].summary = e.target.value; });
+
+  $$('.pool-search').forEach(el=> el.oninput=(e)=>{
+    const key = el.dataset.poolsearch; const q=e.target.value.toLowerCase();
+    const container = document.querySelector(`[data-pool="${key}"]`);
+    let lastLabel = null, labelHasVisible = false;
+    Array.from(container.children).forEach((node)=>{
+      if(node.classList.contains('pool-group-label')){
+        if(lastLabel) lastLabel.style.display = labelHasVisible? '' : 'none';
+        lastLabel = node; labelHasVisible = false;
+      } else {
+        const match = node.textContent.toLowerCase().includes(q);
+        node.style.display = match? '' : 'none';
+        if(match) labelHasVisible = true;
+      }
+    });
+    if(lastLabel) lastLabel.style.display = labelHasVisible? '' : 'none';
+  });
+  $$('.chip').forEach(chip=> chip.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', chip.dataset.cardid); }));
+  $$('.slot').forEach(slot=>{
+    slot.addEventListener('dragover', (e)=>{ e.preventDefault(); slot.classList.add('dragover'); });
+    slot.addEventListener('dragleave', ()=> slot.classList.remove('dragover'));
+    slot.addEventListener('drop', (e)=>{
+      e.preventDefault(); slot.classList.remove('dragover');
+      const cardId = e.dataTransfer.getData('text/plain');
+      const field = slot.dataset.slotfield, qi=+slot.dataset.qidx, pi=+slot.dataset.pidx;
+      const q = VIEW.draft.questions[qi];
+      const arr = field==='tarot'? q.tarotCards : q.lenormandCards;
+      if(!arr[pi]) arr[pi] = {cardId:'',reversed:false,reading:''};
+      arr[pi].cardId = cardId; render();
+    });
+  });
+
+  /* freeform drag-to-move for custom layout slots (mouse + touch via pointer events) */
+  $$('[data-draghandle]').forEach(handle=>{
+    handle.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      const [field, qi, pi] = handle.dataset.draghandle.split(':');
+      const slotEl = handle.closest('.slot');
+      const canvas = handle.closest('.custom-canvas');
+      const canvasRect = canvas.getBoundingClientRect();
+      const move = (ev)=>{
+        let x = ((ev.clientX - canvasRect.left) / canvasRect.width) * 100;
+        let y = ((ev.clientY - canvasRect.top) / canvasRect.height) * 100;
+        x = Math.max(5, Math.min(95, x)); y = Math.max(6, Math.min(94, y));
+        slotEl.style.left = x+'%'; slotEl.style.top = y+'%';
+        slotEl.dataset.pendingX = x; slotEl.dataset.pendingY = y;
+      };
+      const up = ()=>{
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        const q = VIEW.draft.questions[+qi];
+        const arr = field==='tarot'? q.tarotCustomPos : q.lenormandCustomPos;
+        if(slotEl.dataset.pendingX!==undefined) arr[+pi] = {x:+slotEl.dataset.pendingX, y:+slotEl.dataset.pendingY};
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+  });
+
+  $$('.hexReadingCurrent').forEach(el=> el.oninput=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].iching.readingCurrent = e.target.value; });
+  $$('.hexReadingFuture').forEach(el=> el.oninput=(e)=>{ VIEW.draft.questions[+el.dataset.qidx].iching.readingFuture = e.target.value; });
+  $$('[data-hexline]').forEach(bar=> bar.onclick=(e)=>{
+    const [qi, i] = bar.dataset.hexline.split(':');
+    const hex = VIEW.draft.questions[+qi].iching;
+    if(e.shiftKey){ hex.changing[+i] = !hex.changing[+i]; } else { hex.lines[+i] = hex.lines[+i]===1?0:1; }
+    render();
+  });
+
+  if($('#summaryInput')) $('#summaryInput').oninput=(e)=>{ VIEW.draft.summary = e.target.value; };
+  if($('#saveSessionBtn')) $('#saveSessionBtn').onclick=()=>{
+    const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+    VIEW.draft.updatedAt = Date.now();
+    const idx = asker.sessions.findIndex(s=>s.id===VIEW.draft.id);
+    if(idx>-1) asker.sessions[idx] = VIEW.draft; else asker.sessions.push(VIEW.draft);
+    saveData(DATA);
+    VIEW.sessionId = VIEW.draft.id; VIEW.page='view'; VIEW.draft=null; render();
+  };
+  if($('#exportPdfBtn')) $('#exportPdfBtn').onclick=()=> exportDraftAsPdf();
+  if($('#exportPdfBtn2')) $('#exportPdfBtn2').onclick=()=> exportPrintableAsPdf();
+}
+
+function showDeleteModal(){
+  const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+  const overlay = document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.innerHTML = `<div class="modal-box">
+    <h3>${t('deleteTitle')} "${escapeHtml(asker.name)}"?</h3>
+    <p style="font-size:0.82rem;">${t('deleteBody')} ${asker.sessions.length} ${t('deleteBody2')}</p>
+    <div class="row" style="justify-content:center; margin-top:12px;">
+      <button class="btn light" id="cancelDel">${t('cancel')}</button>
+      <button class="btn danger" id="confirmDel">${t('deletePermanently')}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#cancelDel').onclick=()=> overlay.remove();
+  overlay.querySelector('#confirmDel').onclick=()=>{
+    DATA.askers = DATA.askers.filter(a=>a.id!==asker.id); saveData(DATA); overlay.remove();
+    VIEW={page:'home'}; render();
+  };
+}
+
+function showSettingsModal(){
+  const overlay = document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.innerHTML = `<div class="modal-box" style="text-align:left;">
+    <h3 style="color:var(--ink); text-align:center;">${t('settingsTitle')}</h3>
+    <p style="font-size:0.8rem;"><strong>${t('versionLabel')}:</strong> v6.0</p>
+    <p style="font-size:0.8rem;"><strong>${t('creditsLabel')}:</strong> ${t('creditsText')}</p>
+    <hr style="border:none; border-top:1px solid var(--grey1); margin:12px 0;">
+    <p style="font-size:0.75rem; color:var(--grey2);">${t('backupTitle')}</p>
+    <div class="row" style="justify-content:center;">
+      <button class="btn light tiny" id="exportBackupBtn">${t('exportJson')}</button>
+      <button class="btn light tiny" id="importBackupBtn">${t('importJson')}</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;">
+    </div>
+    <div class="row" style="justify-content:center; margin-top:14px;">
+      <button class="btn" id="closeSettings">${t('closeBtn')}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#closeSettings').onclick=()=> overlay.remove();
+  overlay.querySelector('#exportBackupBtn').onclick=()=>{
+    const blob = new Blob([JSON.stringify(DATA,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `wind_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  };
+  const fileInput = overlay.querySelector('#importFileInput');
+  overlay.querySelector('#importBackupBtn').onclick=()=> fileInput.click();
+  fileInput.onchange=(e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload=(ev)=>{
+      try{ const parsed = JSON.parse(ev.target.result); if(parsed && parsed.askers){ DATA = parsed; saveData(DATA); overlay.remove(); VIEW={page:'home'}; render(); } }
+      catch(err){ alert('invalid file'); }
+    };
+    reader.readAsText(file);
+  };
+}
+
+/* ===================== PDF EXPORT ===================== */
+function exportPrintableAsPdf(){
+  const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+  const s = asker.sessions.find(x=>x.id===VIEW.sessionId);
+  renderToPdf(sessionPrintable(asker,s), `${asker.name}_${new Date(s.updatedAt).toISOString().slice(0,10)}.pdf`);
+}
+function exportDraftAsPdf(){
+  const asker = DATA.askers.find(a=>a.id===VIEW.askerId);
+  renderToPdf(sessionPrintable(asker, VIEW.draft), `${asker.name}_draft_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+async function renderToPdf(html, filename){
+  const C = THEME_COLORS[THEME];
+  const area = document.createElement('div');
+  area.style.position='fixed'; area.style.left='-9999px'; area.style.top='0';
+  area.style.width='720px'; area.style.background=C.cream; area.style.padding='20px';
+  area.style.fontFamily = "'M PLUS Rounded 1c','Quicksand','Segoe UI',sans-serif";
+  area.innerHTML = html;
+  document.body.appendChild(area);
+  try{ await document.fonts.ready; }catch(e){}
+  await new Promise(r=>setTimeout(r, 300));
+  html2canvas(area, {scale:2, useCORS:true, backgroundColor:C.cream}).then(canvas=>{
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','pt','a4');
+    const imgData = canvas.toDataURL('image/png');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = canvas.height * pageWidth / canvas.width;
+    let heightLeft = imgHeight, position = 0;
+    pdf.addImage(imgData,'PNG',0,position,pageWidth,imgHeight);
+    heightLeft -= pdf.internal.pageSize.getHeight();
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight; pdf.addPage();
+      pdf.addImage(imgData,'PNG',0,position,pageWidth,imgHeight);
+      heightLeft -= pdf.internal.pageSize.getHeight();
+    }
+    pdf.save(filename); area.remove();
+  });
+}
+
+/* ===================== UTIL ===================== */
+function escapeHtml(str){ return (str||'').toString().replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeAttr(str){ return escapeHtml(str); }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+render();
+showSplash();
+</script>
+</body>
+</html>
