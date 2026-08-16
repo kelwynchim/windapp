@@ -3,11 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WIND</title>
+<title>OORE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  /* ===== OORE BRAND OVERRIDE ===== */
+:root {
+  --sky1: #C4C4C2;
+  --sky2: #DDDCDA;
+  --cream: #F7F6F2;
+  --grey1: #B6B5B2;
+  --grey2: #6B6A67;
+  --ink: #111111;
+  --danger: #A84D46;
+  --glass: rgba(247, 246, 242, 0.74);
+  --glassBorder: rgba(17, 17, 17, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.72);
+  --chip-bg: rgba(255, 255, 255, 0.46);
+}
+
+[data-theme="dark"] {
+  --sky1: #171717;
+  --sky2: #282828;
+  --cream: #111111;
+  --grey1: #5B5B5B;
+  --grey2: #B7B7B4;
+  --ink: #F5F4F0;
+  --danger: #E18B82;
+  --glass: rgba(31, 31, 31, 0.78);
+  --glassBorder: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.08);
+  --chip-bg: rgba(255, 255, 255, 0.06);
+}
+
+.cloud-layer,
+#cursorCloud {
+  display: none !important;
+}
+
+.brand-sub:empty,
+.splash-sub:empty {
+  display: none;
+}
+
+.glass {
+  box-shadow: 0 8px 22px rgba(17, 17, 17, 0.08);
+}
 <style>
   @font-face { font-family: 'Chiron GoRound TC'; src: local('Chiron GoRound TC'); font-weight: normal; }
   :root{
@@ -155,7 +197,7 @@
 <header>
   <div class="brand">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/></svg>
-    <div><div class="brand-title">WIND</div><div class="brand-sub" id="brandSub"></div></div>
+    <div><div class="brand-title">OORE</div><div class="brand-sub" id="brandSub"></div></div>
   </div>
   <nav class="icons">
     <div class="icon-btn" id="themeLight" title="light"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2 2M17.8 17.8l2 2M2 12h3M19 12h3M4.2 19.8l2-2M17.8 6.2l2-2"/></svg></div>
@@ -174,7 +216,7 @@
 /* ===================== I18N ===================== */
 const TRANSLATIONS = {
 en:{
-  brandSub:"tarot · lenormand · i-ching journal", footer:"made with quiet stars, for friends & family",
+  brandSub:"tarot · lenormand · i-ching journal", footer:"powered by KINO",
   askersTitle:"Askers", newAsker:"New Asker", searchAsker:"search a name...", noAskers:"No askers yet — start your first session ✧",
   sessionsCount:"session(s)", lastSession:"last", backAll:"← All Askers", newSession:"New Session", deleteAsker:"Delete Asker",
   askerNotesPh:"general notes about this asker...", sessionsTitle:"Sessions", noSessions:"No sessions yet.", untitled:"(untitled session)",
@@ -199,7 +241,7 @@ en:{
   cardLabel:"choose card", summaryLabel:"Final Summary", questionLabel:"Question", dragHandleHint:"⠿ drag",
   groupMajor:"Major Arcana", groupWands:"Wands", groupCups:"Cups", groupSwords:"Swords", groupPentacles:"Pentacles",
   settingsTitle:"Settings & Admin", versionLabel:"Version", creditsLabel:"Credits",
-  creditsText:"Built quietly for reading tarot, lenormand & i-ching with friends and family.",
+  creditsText:"Built quietly for reading tarot, lenormand & i-ching.",
   backupTitle:"Backup", exportJson:"Export data (.json)", importJson:"Import data (.json)", closeBtn:"Close",
   gregorianLabel:"Solar Date", lunarLabel:"Lunar Date", moonPhaseLabel:"Moon Phase", zodiacLabel:"Zodiac Sun Sign",
   fourPillarsLabel:"Four Pillars (BaZi)", elementsLabel:"Five Elements", luckTitle:"Today's Fortune",
@@ -208,7 +250,7 @@ en:{
 },
 zh: {
     brandSub: "塔羅 · 雷諾曼 · 易經紀錄",
-    footer: "為朋友同家人而做的靜謐星圖",
+    footer: "KINO做的靜謐星圖",
 
     askersTitle: "占問者",
     newAsker: "新增占問者",
@@ -327,7 +369,7 @@ zh: {
     hourP: "時柱"
   },
 ko:{
-  brandSub:"타로 · 르노르망 · 주역 기록", footer:"친구와 가족을 위한 조용한 별의 기록",
+  brandSub:"타로 · 르노르망 · 주역 기록", footer:"KINO - 조용한 별의 기록",
   askersTitle:"내담자", newAsker:"내담자 추가", searchAsker:"이름 검색...", noAskers:"아직 내담자가 없어요 — 첫 세션을 시작하세요 ✧",
   sessionsCount:"세션", lastSession:"최근", backAll:"← 전체 내담자", newSession:"새 세션", deleteAsker:"내담자 삭제",
   askerNotesPh:"이 내담자에 대한 일반 메모...", sessionsTitle:"세션", noSessions:"아직 세션이 없어요.", untitled:"(제목 없는 세션)",
@@ -649,7 +691,7 @@ function showSplash(){
   const el=document.createElement('div'); el.id='splash';
   el.innerHTML = `<div class="splash-inner">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 15a4 4 0 0 1 .3-8 5 5 0 0 1 9.7-1 4.5 4.5 0 0 1 1 8.9"/></svg>
-    <div class="splash-title">WIND</div><div class="splash-sub">a quiet reading journal</div></div>`;
+    <div class="splash-title">OORE</div></div>`;
   document.body.appendChild(el);
   const hide = ()=>{ el.classList.add('fade-out'); setTimeout(()=> el.remove(), 800); };
   setTimeout(hide, 3400);
@@ -673,7 +715,6 @@ function defaultCustomPos(i){ const angle=(i*67)%360; const rad=angle*Math.PI/18
 
 /* ===================== ROUTER ===================== */
 function render(){
-  document.getElementById('brandSub').textContent = t('brandSub');
   document.getElementById('footerText').textContent = t('footer');
   applyTheme();
   const app = document.getElementById('app');
@@ -1002,7 +1043,7 @@ function sessionPrintable(asker, s){
     </div>`;
   }).join('');
   return `<div id="printable" style="font-family:'M PLUS Rounded 1c','Quicksand','Segoe UI',sans-serif; background:${C.cream}; color:${C.ink}; border-radius:18px; padding:22px; border:1px solid ${C.border};">
-    <div style="margin-bottom:8px; font-size:0.9rem; letter-spacing:3px; color:${C.grey2}; font-weight:700;">WIND</div>
+    <div style="margin-bottom:8px; font-size:0.9rem; letter-spacing:3px; color:${C.grey2}; font-weight:700;">OORE</div>
     <h2 style="font-size:1.1rem; color:${C.ink}; margin:0 0 4px;">${escapeHtml(asker.name)}</h2>
     <p style="font-size:0.7rem; color:${C.grey2};">${new Date(s.updatedAt||s.createdAt).toLocaleString()}</p>
     ${questionsHtml}
@@ -1232,7 +1273,7 @@ function showSettingsModal(){
   overlay.querySelector('#exportBackupBtn').onclick=()=>{
     const blob = new Blob([JSON.stringify(DATA,null,2)], {type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `wind_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    a.download = `oore_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
   };
   const fileInput = overlay.querySelector('#importFileInput');
   overlay.querySelector('#importBackupBtn').onclick=()=> fileInput.click();
