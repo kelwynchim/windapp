@@ -9,48 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-    /* ===== OORE BRAND OVERRIDE ===== */
-:root {
-  --sky1: #C4C4C2;
-  --sky2: #DDDCDA;
-  --cream: #F7F6F2;
-  --grey1: #B6B5B2;
-  --grey2: #6B6A67;
-  --ink: #111111;
-  --danger: #A84D46;
-  --glass: rgba(247, 246, 242, 0.74);
-  --glassBorder: rgba(17, 17, 17, 0.12);
-  --input-bg: rgba(255, 255, 255, 0.72);
-  --chip-bg: rgba(255, 255, 255, 0.46);
-}
-
-[data-theme="dark"] {
-  --sky1: #171717;
-  --sky2: #282828;
-  --cream: #111111;
-  --grey1: #5B5B5B;
-  --grey2: #B7B7B4;
-  --ink: #F5F4F0;
-  --danger: #E18B82;
-  --glass: rgba(31, 31, 31, 0.78);
-  --glassBorder: rgba(255, 255, 255, 0.12);
-  --input-bg: rgba(255, 255, 255, 0.08);
-  --chip-bg: rgba(255, 255, 255, 0.06);
-}
-
-.cloud-layer,
-#cursorCloud {
-  display: none !important;
-}
-
-.brand-sub:empty,
-.splash-sub:empty {
-  display: none;
-}
-
-.glass {
-  box-shadow: 0 8px 22px rgba(17, 17, 17, 0.08);
-}
   @font-face { font-family: 'Chiron GoRound TC'; src: local('Chiron GoRound TC'); font-weight: normal; }
   :root{
     --sky1:#B7C9DA; --sky2:#DCE6EF; --cream:#F3F2EE; --grey1:#C7CDD6; --grey2:#888FA0;
@@ -190,6 +148,52 @@
   @keyframes splashIn{from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);}}
   @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
   @media print{ header, nav, .no-print{display:none !important;} }
+    /* ===== OORE BRAND OVERRIDE: KEEP THIS AT THE END OF <style> ===== */
+
+:root {
+  --sky1: #C4C4C2;
+  --sky2: #DDDCDA;
+  --cream: #F7F6F2;
+  --grey1: #B6B5B2;
+  --grey2: #6B6A67;
+  --ink: #111111;
+  --danger: #A84D46;
+  --glass: rgba(247, 246, 242, 0.74);
+  --glassBorder: rgba(17, 17, 17, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.72);
+  --chip-bg: rgba(255, 255, 255, 0.46);
+}
+
+[data-theme="dark"] {
+  --sky1: #171717;
+  --sky2: #282828;
+  --cream: #111111;
+  --grey1: #5B5B5B;
+  --grey2: #B7B7B4;
+  --ink: #F5F4F0;
+  --danger: #E18B82;
+  --glass: rgba(31, 31, 31, 0.78);
+  --glassBorder: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.08);
+  --chip-bg: rgba(255, 255, 255, 0.06);
+}
+
+/* Remove the former cloud visual language */
+.cloud-layer,
+#cursorCloud {
+  display: none !important;
+}
+
+/* Remove unused subtitle spacing */
+.brand-sub:empty,
+.splash-sub:empty {
+  display: none;
+}
+
+/* Softer OORE shadow */
+.glass {
+  box-shadow: 0 8px 22px rgba(17, 17, 17, 0.08);
+}
 </style>
 </head>
 <body>
